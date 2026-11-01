@@ -66,6 +66,7 @@ jobs:
           pnpm install --frozen-lockfile
           pnpm test
           pnpm exec tsc -b
+          node scripts/generate-sample-index.mjs
           pnpm exec vite build --base=/cycling-map/develop/
 
       - name: Combine sites

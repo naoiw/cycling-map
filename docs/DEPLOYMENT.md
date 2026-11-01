@@ -15,12 +15,15 @@ Settings → Pages → Build and deployment → Source は **GitHub Actions** �
 - `.github/workflows/deploy-pages.yml`: mainへのpush、またはdevelopのCI成功で開始。両ブランチをビルドして1つのPages artifactに結合し、公開。
 - `production/dist/` → artifactのルート、`preview/dist/` → `develop/`。
 
+サンプルは`public/samples/` に日付名の `*.gpx` を最大4件配置します。各ビルドで `samples/index.json` を生成するので、4ファイルの名前が変わってもソースコードの修正は不要です。公開済みGPXはURL経由で誰でも参照できます。
+
 公開アーティファクトは1つだけです。ビルド元はmainとdevelopで区別しており、develop用のVite baseは `/cycling-map/develop/` を指定します。
 
 ```sh
 pnpm install --frozen-lockfile
 pnpm test
 pnpm build
+node scripts/generate-sample-index.mjs
 pnpm exec vite build --base=/cycling-map/develop/
 ```
 

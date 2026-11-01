@@ -11,14 +11,36 @@
 
 ## 主な機能
 
-- GPX・TCXファイルの複数選択、ドラッグ＆ドロップ、サンプル表示
+- GPX・TCXファイルの複数選択、ドラッグ＆ドロップ、日付名GPXのサンプル表示
 - OpenStreetMap上に複数経路を色分けして重ね描き
 - 経路ごとの表示切り替え、個別の経路にズーム、全経路にフィット
 - 各走行の日時・経過時間・走行距離・ポイント数・累積標高上昇量（記録がある場合）
 - 全件と表示中それぞれの走行距離集計、日時順の記録一覧
 - スマートフォンを含むレスポンシブUI
 
-サンプルは架空のログです。個人の走行ログはリポジトリに含めていません。
+公開用サンプルGPXは `public/samples/` に4件登録しています。
+
+## サンプルGPXの登録
+
+[public/samples/](public/samples/) に、`yymmdd.gpx` 形式のGPXを最大4ファイル配置します。
+
+現在は以下の4件が登録されています。
+
+```text
+public/samples/
+  211120.gpx
+  211204.gpx
+  220619.gpx
+  220706.gpx
+  README.md
+```
+
+- 「サンプルの経路を表示」を押すと、4件すべてを読み込みます。
+- ファイル名をコードに追加する必要はありません。`pnpm dev` / `pnpm build` で自動検出されます。1～3件でも利用でき、5件以上はビルドエラーになります。
+- 追加・入れ替えはまず `develop` にpushし、PRを `main` にマージして公開してください。
+- **公開サンプルGPXはGitHub Pages上から誰でもダウンロードできます。** GPS座標・日時などを一般公開してよいか必ず確認してください。
+
+詳細は [public/samples/README.md](public/samples/README.md) を参照してください。
 
 ## 操作方法
 
@@ -58,7 +80,8 @@ pnpm build   # 型チェックと本番ビルド
 - `src/lib/parser.ts` — GPX / TCXのXML解析
 - `src/lib/geo.ts` — 緯度経度からの距離計算
 - `src/lib/rideColors.ts` — 経路と一覧マーカーに共通の色
-- `public/samples/` — 模擬GPX / TCXサンプル
+- `public/samples/` — 公開サンプルGPX（4件）
+- `scripts/generate-sample-index.mjs` — サンプル一覧の自動生成
 - `tests/` — Node.jsによる地理計算のテスト
 - `.github/workflows/` — CI・GitHub Pagesデプロイ
 - `docs/` — 仕様と開発資料

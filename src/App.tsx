@@ -2,6 +2,7 @@ import { useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'rea
 import MapView from './MapView'
 import { parseRide, type Ride } from './lib/parser'
 import { rideColor } from './lib/rideColors'
+import { summarizeVisibleRides } from './lib/rideStats'
 
 const dateLabel = (date: string | null) => date
   ? new Date(date).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -23,14 +24,7 @@ function App() {
   const [errors, setErrors] = useState<string[]>([])
   const [focus, setFocus] = useState<{ id: string; nonce: number } | null>(null)
   const [fitAllNonce, setFitAllNonce] = useState(0)
-  const stats = useMemo(() => {
-    const visible = rides.filter(ride => ride.visible)
-    return {
-      distance: rides.reduce((total, ride) => total + ride.distanceKm, 0),
-      visibleDistance: visible.reduce((total, ride) => total + ride.distanceKm, 0),
-      visibleCount: visible.length,
-    }
-  }, [rides])
+  const stats = useMemo(() => summarizeVisibleRides(rides), [rides])
   const sorted = useMemo(() => [...rides].sort((a, b) => {
     if (a.date === null) return 1
     if (b.date === null) return -1
@@ -155,7 +149,7 @@ function App() {
           </section>
           <section className="stats-grid" aria-label="読み込みデータの集計">
             <div className="stat"><span className="stat-label">読み込み件数</span><strong>{rides.length}<small> 件</small></strong></div>
-            <div className="stat"><span className="stat-label">総走行距離</span><strong>{km(stats.distance)}<small> km</small></strong></div>
+            <div className="stat"><span className="stat-label">表示中の獲得標高</span><strong>{stats.elevationDataCount > 0 ? stats.visibleElevationGain.toLocaleString('ja-JP') : '—'}<small> m</small></strong><span className="stat-sub">{stats.elevationDataCount > 0 ? `${stats.elevationDataCount} 件の標高データを集計` : '標高データなし'}</span></div>
             <div className="stat"><span className="stat-label">表示中の走行距離</span><strong>{km(stats.visibleDistance)}<small> km</small></strong><span className="stat-sub">{stats.visibleCount} 件を地図に表示</span></div>
           </section>
           <div className="workspace">
@@ -202,7 +196,7 @@ function App() {
                           <button className="ride-title" type="button" onClick={() => { if (!ride.visible) setRides(previous => previous.map(item => item.id === ride.id ? { ...item, visible: true } : item)); setFocus({ id: ride.id, nonce: ++focusNonceRef.current }) }}>{ride.name}</button>
                           <div className="ride-date">{dateLabel(ride.date)} <span className="format-tag">{ride.format}</span></div>
                           <div className="ride-meta"><strong>{km(ride.distanceKm)} km</strong><span>{durationLabel(ride.durationSeconds)}</span></div>
-                          <div className="ride-extra">{ride.pointCount.toLocaleString('ja-JP')} ポイント{ride.elevationGainM !== null ? ' / 累積上昇 ' + ride.elevationGainM.toLocaleString('ja-JP') + ' m' : ''}</div>
+                          <div className="ride-extra">{ride.pointCount.toLocaleString('ja-JP')} ポイント{ride.elevationGainM !== null ? ' / 獲得標高 ' + ride.elevationGainM.toLocaleString('ja-JP') + ' m' : ''}</div>
                         </div>
                         <button className="remove-button" type="button" onClick={() => remove(ride.id)} aria-label={ride.name + 'を削除'} title="この記録を削除">×</button>
                       </li>

@@ -102,40 +102,44 @@ function App() {
 
   return (
     <div className="site-shell">
-      <header className="site-header chrome-container">
-        <div className="brand-lockup"><span className="brand-mark" aria-hidden="true">↗</span><span>CYCLING <em>MAP</em></span></div>
-        <a className="header-link" href="https://github.com/naoiw/cycling-map" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
-      </header>
-      <main className="chrome-container">
-        <div className="page-heading">
-          <div className="kicker">ACTIVITY VIEWER</div>
-          <h1>サイクリング走行ログ</h1>
-          <p>GPX・TCXファイルの軌跡を地図に重ねて表示します。</p>
-        </div>
-        <div className="stats-grid" aria-label="読み込みデータの集計">
-          <div className="stat"><span className="stat-label">読み込み件数</span><strong>{rides.length}<small> 件</small></strong></div>
-          <div className="stat"><span className="stat-label">総走行距離</span><strong>{km(stats.distance)}<small> km</small></strong></div>
-          <div className="stat"><span className="stat-label">表示中の走行距離</span><strong>{km(stats.visibleDistance)}<small> km</small></strong><span className="stat-sub">{stats.visibleCount} 件を地図に表示</span></div>
-        </div>
+      <div className="page-container">
+        <header className="site-header">
+          <div className="site-brand">
+            <span className="brand-mark" aria-hidden="true">↗</span>
+            <span>CYCLING MAP</span>
+          </div>
+          <span className="header-caption">ACTIVITY VIEWER</span>
+        </header>
+        <main className="site-main">
+          <section className="page-intro" aria-labelledby="page-title">
+            <p className="section-kicker">RIDE HISTORY</p>
+            <h1 id="page-title">サイクリング走行ログ</h1>
+            <p className="page-description">GPX・TCXファイルの軌跡を地図に重ねて表示します。</p>
+          </section>
+          <section className="stats-grid" aria-label="読み込みデータの集計">
+            <div className="stat"><span className="stat-label">読み込み件数</span><strong>{rides.length}<small> 件</small></strong></div>
+            <div className="stat"><span className="stat-label">総走行距離</span><strong>{km(stats.distance)}<small> km</small></strong></div>
+            <div className="stat"><span className="stat-label">表示中の走行距離</span><strong>{km(stats.visibleDistance)}<small> km</small></strong><span className="stat-sub">{stats.visibleCount} 件を地図に表示</span></div>
+          </section>
         <div className="workspace">
-          <section className="map-panel" aria-label="走行地図">
+          <section className="panel map-panel" aria-labelledby="map-title">
             <div className="panel-top">
-              <div><div className="kicker">ROUTE MAP</div><h2>走行経路</h2></div>
-              <button className="outline-button" disabled={!stats.visibleCount} onClick={() => { setFocus(null); setFitAllNonce(value => value + 1) }} type="button">全経路に合わせる</button>
+              <div><p className="section-kicker">ROUTE MAP</p><h2 id="map-title">走行経路</h2></div>
+              <button className="button button--secondary" disabled={!stats.visibleCount} onClick={() => { setFocus(null); setFitAllNonce(value => value + 1) }} type="button">全経路に合わせる</button>
             </div>
             <MapView rides={rides} focus={focus} fitAllNonce={fitAllNonce} />
-            <div className="map-footer"><span>地図: © OpenStreetMap contributors</span><span>経路は表示中のデータのみ描画</span></div>
+            <div className="map-footer"><span>OpenStreetMap / Leaflet</span><span>表示中の記録を地図に重ねて描画</span></div>
           </section>
-          <aside className="side-panel" aria-label="ファイルと走行記録">
+          <aside className="panel side-panel" aria-label="ファイルと走行記録">
             <section className="side-section">
-              <div className="kicker">01 / IMPORT</div>
+              <p className="section-kicker">01 / IMPORT</p>
               <h2>走行ログを追加</h2>
               <div className="drop-zone" onDragOver={event => event.preventDefault()} onDrop={onDrop}>
                 <div className="upload-symbol" aria-hidden="true">↑</div>
                 <strong>GPX / TCX ファイル</strong>
                 <p>ここにドラッグ＆ドロップ、またはファイルを選択</p>
                 <input ref={inputRef} type="file" accept=".gpx,.tcx" multiple onChange={onInput} className="visually-hidden" aria-label="GPXまたはTCXファイルを選択" />
-                <button type="button" className="primary-button" onClick={() => inputRef.current?.click()} disabled={busy}>{busy ? '読み込み中…' : 'ファイルを選択'}</button>
+                <button type="button" className="button button--primary" onClick={() => inputRef.current?.click()} disabled={busy}>{busy ? '読み込み中…' : 'ファイルを選択'}</button>
               </div>
               <button type="button" className="sample-button" onClick={() => void loadSample()} disabled={busy}>サンプルの経路を表示</button>
               <p className="privacy-note">ファイルはこのブラウザ内で処理され、サーバーに送信しません。再読み込みすると表示内容は消去されます。</p>
@@ -143,7 +147,7 @@ function App() {
             </section>
             <section className="side-section">
               <div className="activity-heading">
-                <div><div className="kicker">02 / ACTIVITIES</div><h2>走行記録 <span>({rides.length})</span></h2></div>
+                <div><p className="section-kicker">02 / ACTIVITIES</p><h2>走行記録 <span>({rides.length})</span></h2></div>
                 <div className="activity-tools">
                   <button type="button" onClick={() => setAll(true)} disabled={!rides.length}>全表示</button>
                   <button type="button" onClick={() => setAll(false)} disabled={!rides.length}>全非表示</button>
@@ -173,8 +177,12 @@ function App() {
           </aside>
         </div>
         <p className="bottom-note">距離はGPS座標から算出した概算値です。記録の欠落、GPS誤差、異なるセグメント間の移動などは反映されません。日時・経過時間はファイルに記録されている場合のみ表示されます。</p>
-      </main>
-      <footer className="site-footer chrome-container"><span>CYCLING MAP</span><a href="https://github.com/naoiw/cycling-map" target="_blank" rel="noopener noreferrer">GitHub ↗</a></footer>
+        </main>
+        <footer className="site-footer">
+          <span>CYCLING MAP</span>
+          <a href="https://github.com/naoiw/cycling-map" target="_blank" rel="noopener noreferrer" aria-label="GitHubでソースコードを開く">GitHub ↗</a>
+        </footer>
+      </div>
     </div>
   )
 }

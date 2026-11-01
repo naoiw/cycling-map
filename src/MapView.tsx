@@ -20,7 +20,7 @@ export default function MapView({ rides, focus, fitAllNonce }: {
     const L = (window as LeafletWindow).L
     if (!L || !nodeRef.current) { setFailed(true); return }
     const map = L.map(nodeRef.current, { zoomControl: false }).setView([36.5, 138], 5)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap contributors</a>',
     }).addTo(map)

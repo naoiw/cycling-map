@@ -1,22 +1,21 @@
-# GitHub Pages
+# GitHub Pages 公開構成
 
-## URL
+## 公開URL
 
-- 本番: https://naoiw.github.io/cycling-map/ （main）
-- プレビュー: https://naoiw.github.io/cycling-map/develop/ （develop）
+| 環境 | ブランチ | パス |
+| --- | --- | --- |
+| 本番 | `main` | https://naoiw.github.io/cycling-map/ |
+| 開発プレビュー | `develop` | https://naoiw.github.io/cycling-map/develop/ |
 
-## 設定
-
-リポジトリの Settings → Pages → Build and deployment → Source を **GitHub Actions** にする。
-独立したPages環境を2つ作らず、両方のビルド出力を1 artifact にまとめます。
+Settings → Pages → Build and deployment → Source は **GitHub Actions** に設定してください。
 
 ## ワークフロー
 
-- `.github/workflows/validate-develop.yml` — `develop`へのpushとPRを検証。
-- `.github/workflows/deploy-pages.yml` — `main` push、またはdevelopの検証成功で実行。mainを本番に、検証したdevelopコミットを開発プレビューにビルドし、1回でデプロイ。
-- `develop` へpushしても検証失敗時は公開しない。mainへのpushは両環境を再ビルド。
+- `.github/workflows/validate-develop.yml`: developへのpushおよびPRでテストとビルドを実行。
+- `.github/workflows/deploy-pages.yml`: mainへのpush、またはdevelopのCI成功で開始。両ブランチをビルドして1つのPages artifactに結合し、公開。
+- `production/dist/` → artifactのルート、`preview/dist/` → `develop/`。
 
-## ローカルのビルド確認
+公開アーティファクトは1つだけです。ビルド元はmainとdevelopで区別しており、develop用のVite baseは `/cycling-map/develop/` を指定します。
 
 ```sh
 pnpm install --frozen-lockfile
@@ -25,4 +24,8 @@ pnpm build
 pnpm exec vite build --base=/cycling-map/develop/
 ```
 
-本番・開発URLはいずれもViteのbaseを正しく設定する必要があります。
+### トラブルシュート
+
+- ページは開くが画像・JSが404: Viteの `base` が公開パスと一致するか確認。
+- `develop/` だけ古い: developの `Validate develop` が成功し、関連するDeploy to GitHub Pagesが成功したか確認。
+- 地図が表示されない: インターネット接続、LeafletのCDN読込、OpenStreetMapタイルへの接続を確認。

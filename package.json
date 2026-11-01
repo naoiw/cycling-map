@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "test": "tsc --target es2020 --module commonjs --moduleResolution node --strict --skipLibCheck --outDir tests/dist src/lib/geo.ts && node tests/setup-commonjs.cjs && node --test tests/geo.test.cjs"
+    "test": "tsc --target es2020 --module esnext --moduleResolution bundler --strict --skipLibCheck --outDir tests/dist src/lib/geo.ts && node --test tests/geo.test.mjs"
   },
   "dependencies": {
     "react": "^18.3.1",

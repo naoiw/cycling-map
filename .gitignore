@@ -6,3 +6,6 @@ tests/dist/
 .env
 .env.*
 !.env.example
+
+# Automatically generated during dev/build
+public/samples/index.json

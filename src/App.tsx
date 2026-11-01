@@ -86,15 +86,30 @@ function App() {
 
   function loadSample() {
     void importFiles(async () => {
-      const paths = ['samples/example.gpx', 'samples/example.tcx']
-      return Promise.all(paths.map(async path => {
-        const response = await fetch(import.meta.env.BASE_URL + path)
-        if (!response.ok) throw new Error('サンプルファイルの取得に失敗しました。')
+      // The index is generated when the app is built from public/samples/YYMMDD.gpx.
+      const base = import.meta.env.BASE_URL + 'samples/'
+      const indexResponse = await fetch(base + 'index.json', { cache: 'no-store' })
+      if (!indexResponse.ok) throw new Error('サンプル一覧を取得できませんでした。')
+      const index: unknown = await indexResponse.json()
+      if (!index || typeof index !== 'object' || !('files' in index)) {
+        throw new Error('サンプル一覧の形式が正しくありません。')
+      }
+
+      const names = index.files
+      if (!Array.isArray(names) || names.length > 4 ||
+        !names.every((name): name is string => typeof name === 'string' && /^\d{6}\.gpx$/.test(name)) ||
+        new Set(names).size !== names.length) {
+        throw new Error('サンプル一覧の形式が正しくありません。')
+      }
+      if (names.length === 0) {
+        throw new Error('サンプルGPXはまだ登録されていません。public/samples/ に yymmdd.gpx 形式で配置してください。')
+      }
+
+      return Promise.all(names.map(async name => {
+        const response = await fetch(base + name)
+        if (!response.ok) throw new Error(name + ': サンプルGPXを取得できませんでした。')
         const contents = await response.text()
-        return new File([contents], path.split('/').pop()!, {
-          type: 'application/xml',
-          lastModified: 0,
-        })
+        return new File([contents], name, { type: 'application/gpx+xml', lastModified: 0 })
       }))
     })
   }

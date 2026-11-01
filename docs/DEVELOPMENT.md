@@ -27,8 +27,12 @@ pnpm build
 - `src/lib/parser.ts`: ブラウザのDOMParserを使ったGPX/TCX解析。XML名前空間はlocalNameで判定。
 - `src/lib/geo.ts`: 地理計算の純粋関数。
 - `src/lib/rideColors.ts`: 地図経路と一覧に共通の色定義。
-- `public/samples/`: 位置情報を含む実利用者データではなく、架空の例。
+- `public/samples/`: 公開サンプル用の4つの `yymmdd.gpx` と配置手順。
+- `scripts/generate-sample-index.mjs`: dev/build前にサンプルを走査して `public/samples/index.json` を生成。
+- `tests/samples.test.mjs`: 日付ファイル名のフィルタリング、最大件数のテスト。
 - `src/index.css`: 他のnaoiwサイトと整合したサイト共通トークンとアプリ固有スタイル。
+
+開発サーバー起動後にサンプルを増減した場合は、`pnpm dev` を再起動してください。`pnpm exec vite build` 単独ではインデックスの自動生成が実行されないので、原則 `pnpm build` を使用してください。develop用のPagesワークフローは明示的に生成スクリプトを実行します。
 
 DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは公開プレビューでサンプルを読み込んで確認してください。NodeテストはXMLパーサーの網羅的検証を意味しません。
 
@@ -41,4 +45,4 @@ DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは�
 
 ## 個人データの取り扱い
 
-個人のGPX・TCXログやAPIキーはGitへ含めない。旧JourneyMap内の個人データ・Google Mapsキーは移植しない。
+公開を意図しない個人のGPX・TCXログやAPIキーはGitへ含めない。**公開サンプルGPXは第三者がダウンロードでき、位置・時刻情報を復元できる**ため、事前に内容を確認する。旧JourneyMap内の個人データ・Google Mapsキーは移植しない。

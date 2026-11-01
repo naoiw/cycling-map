@@ -63,7 +63,7 @@ pnpm build   # 型チェックと本番ビルド
 - `.github/workflows/` — CI・GitHub Pagesデプロイ
 - `docs/` — 仕様と開発資料
 
-詳細：[仕様](docs/SPEC.md) / [開発](docs/DEVELOPMENT.md) / [デプロイ](docs/DEPLOYMENT.md) / [UI共通ルール](docs/UI_CONSISTENCY.md)
+詳細：[仕様](docs/SPEC.md) / [開発](docs/DEVELOPMENT.md) / [デプロイ](docs/DEPLOYMENT.md)
 
 ## ライセンス
 

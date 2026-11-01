@@ -50,6 +50,7 @@ pnpm build
 - [仕様](docs/SPEC.md)
 - [開発](docs/DEVELOPMENT.md)
 - [公開](docs/DEPLOYMENT.md)
+- [サイト共通UI](docs/UI_CONSISTENCY.md)
 
 ## ライセンス
 

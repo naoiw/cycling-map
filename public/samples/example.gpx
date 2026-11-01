@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="cycling-map sample" xmlns="http://www.topografix.com/GPX/1/1">
+  <metadata><name>サンプル: 皇居周辺の模擬経路 (GPX)</name><time>2026-01-01T00:00:00Z</time></metadata>
+  <trk><name>サンプル: 皇居周辺の模擬経路 (GPX)</name><trkseg>
+    <trkpt lat="35.6813" lon="139.7595"><ele>14</ele><time>2026-01-01T00:00:00Z</time></trkpt>
+    <trkpt lat="35.6848" lon="139.7569"><ele>15</ele><time>2026-01-01T00:03:00Z</time></trkpt>
+    <trkpt lat="35.6884" lon="139.7535"><ele>20</ele><time>2026-01-01T00:07:00Z</time></trkpt>
+    <trkpt lat="35.6926" lon="139.7538"><ele>21</ele><time>2026-01-01T00:11:00Z</time></trkpt>
+    <trkpt lat="35.6944" lon="139.7585"><ele>18</ele><time>2026-01-01T00:14:00Z</time></trkpt>
+    <trkpt lat="35.6917" lon="139.7631"><ele>17</ele><time>2026-01-01T00:18:00Z</time></trkpt>
+    <trkpt lat="35.6878" lon="139.7647"><ele>15</ele><time>2026-01-01T00:22:00Z</time></trkpt>
+    <trkpt lat="35.6833" lon="139.7636"><ele>13</ele><time>2026-01-01T00:26:00Z</time></trkpt>
+    <trkpt lat="35.6813" lon="139.7595"><ele>14</ele><time>2026-01-01T00:30:00Z</time></trkpt>
+  </trkseg></trk>
+</gpx>

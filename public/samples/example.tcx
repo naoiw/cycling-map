@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<TrainingCenterDatabase xmlns="http://www.garmin.com/xmlschemas/TrainingCenterDatabase/v2">
+  <Activities><Activity Sport="Biking"><Id>2026-01-02T00:00:00Z</Id>
+    <Lap StartTime="2026-01-02T00:00:00Z"><Track>
+      <Trackpoint><Time>2026-01-02T00:00:00Z</Time><Position><LatitudeDegrees>35.6770</LatitudeDegrees><LongitudeDegrees>139.7454</LongitudeDegrees></Position><AltitudeMeters>25</AltitudeMeters></Trackpoint>
+      <Trackpoint><Time>2026-01-02T00:05:00Z</Time><Position><LatitudeDegrees>35.6747</LatitudeDegrees><LongitudeDegrees>139.7480</LongitudeDegrees></Position><AltitudeMeters>27</AltitudeMeters></Trackpoint>
+      <Trackpoint><Time>2026-01-02T00:10:00Z</Time><Position><LatitudeDegrees>35.6711</LatitudeDegrees><LongitudeDegrees>139.7519</LongitudeDegrees></Position><AltitudeMeters>26</AltitudeMeters></Trackpoint>
+      <Trackpoint><Time>2026-01-02T00:15:00Z</Time><Position><LatitudeDegrees>35.6685</LatitudeDegrees><LongitudeDegrees>139.7558</LongitudeDegrees></Position><AltitudeMeters>30</AltitudeMeters></Trackpoint>
+    </Track></Lap>
+  </Activity></Activities>
+</TrainingCenterDatabase>

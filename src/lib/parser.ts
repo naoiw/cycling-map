@@ -24,22 +24,21 @@ type SamplePoint = {
 function children(element: Element, localName: string): Element[] {
   return Array.from(element.children).filter(child => child.localName === localName)
 }
+function child(element: Element | undefined, localName: string): Element | undefined {
+  return element && children(element, localName)[0]
+}
 function descendants(element: Element, localName: string): Element[] {
   return Array.from(element.getElementsByTagName('*')).filter(child => child.localName === localName)
-}
-function first(element: Element, localName: string): Element | undefined {
-  return descendants(element, localName)[0]
 }
 function text(element: Element | undefined): string {
   return element?.textContent?.trim() ?? ''
 }
 function timestamp(value: string): number | null {
-  if (!value) return null
-  const ms = Date.parse(value)
+  const ms = value ? Date.parse(value) : NaN
   return Number.isFinite(ms) ? ms : null
 }
 function sample(lat: string | null, lon: string | null, time: string, elevation: string): SamplePoint | null {
-  if (lat === null || lon === null || lat.trim() === '' || lon.trim() === '') return null
+  if (lat === null || lon === null || !lat.trim() || !lon.trim()) return null
   const latitude = Number(lat)
   const longitude = Number(lon)
   if (!validPoint(latitude, longitude)) return null
@@ -50,83 +49,97 @@ function sample(lat: string | null, lon: string | null, time: string, elevation:
     elevation: Number.isFinite(height) ? height : null,
   }
 }
+
 function gpxSegments(root: Element): SamplePoint[][] {
-  const result: SamplePoint[][] = []
+  const segments: SamplePoint[][] = []
   for (const segment of descendants(root, 'trkseg')) {
     const points = children(segment, 'trkpt').map(pt => sample(
-      pt.getAttribute('lat'), pt.getAttribute('lon'), text(first(pt, 'time')), text(first(pt, 'ele')),
+      pt.getAttribute('lat'), pt.getAttribute('lon'),
+      text(child(pt, 'time')), text(child(pt, 'ele')),
     )).filter((pt): pt is SamplePoint => pt !== null)
-    if (points.length > 0) result.push(points)
+    if (points.length > 0) segments.push(points)
   }
-  if (result.length === 0) {
+  // A GPX file can contain tracks or routes; route points are used if no
+  // usable track points are present, matching the previous JourneyMap behavior.
+  if (!segments.length) {
     for (const route of descendants(root, 'rte')) {
       const points = children(route, 'rtept').map(pt => sample(
-        pt.getAttribute('lat'), pt.getAttribute('lon'), text(first(pt, 'time')), text(first(pt, 'ele')),
+        pt.getAttribute('lat'), pt.getAttribute('lon'),
+        text(child(pt, 'time')), text(child(pt, 'ele')),
       )).filter((pt): pt is SamplePoint => pt !== null)
-      if (points.length > 0) result.push(points)
+      if (points.length > 0) segments.push(points)
     }
   }
-  return result
-}
-function tcxSegments(root: Element): SamplePoint[][] {
-  const result: SamplePoint[][] = []
-  for (const track of descendants(root, 'Track')) {
-    const points = children(track, 'Trackpoint').map(pt => {
-      const position = first(pt, 'Position')
-      if (!position) return null
-      return sample(
-        text(first(position, 'LatitudeDegrees')),
-        text(first(position, 'LongitudeDegrees')),
-        text(first(pt, 'Time')),
-        text(first(pt, 'AltitudeMeters')),
-      )
-    }).filter((pt): pt is SamplePoint => pt !== null)
-    if (points.length > 0) result.push(points)
-  }
-  return result
+  return segments
 }
 
-/** Parses XML entirely in the browser; neither input nor parsed positions are uploaded. */
+function tcxSegments(root: Element): SamplePoint[][] {
+  const segments: SamplePoint[][] = []
+  for (const track of descendants(root, 'Track')) {
+    const points = children(track, 'Trackpoint').map(pt => {
+      const position = child(pt, 'Position')
+      if (!position) return null
+      return sample(
+        text(child(position, 'LatitudeDegrees')),
+        text(child(position, 'LongitudeDegrees')),
+        text(child(pt, 'Time')),
+        text(child(pt, 'AltitudeMeters')),
+      )
+    }).filter((pt): pt is SamplePoint => pt !== null)
+    if (points.length > 0) segments.push(points)
+  }
+  return segments
+}
+
+/** Parse one activity locally in the browser; no file data is uploaded. */
 export function parseRide(xml: string, fileName: string, id: string): Ride {
   const document = new DOMParser().parseFromString(xml, 'application/xml')
   if (document.getElementsByTagName('parsererror').length) {
     throw new Error('XMLの形式が正しくありません。')
   }
   const root = document.documentElement
-  const format: ActivityFormat = root.localName === 'gpx' ? 'GPX'
-    : root.localName === 'TrainingCenterDatabase' ? 'TCX'
-      : (() => { throw new Error('GPXまたはTCX形式ではありません。') })()
-  const rawSegments = format === 'GPX' ? gpxSegments(root) : tcxSegments(root)
-  // Discard empty/singleton geometry: such segments cannot form a route line.
-  const validSegments = rawSegments.filter(points => points.length >= 2)
-  if (!validSegments.length) throw new Error('地図に描画できる座標が2点以上ありません。')
+  let format: ActivityFormat
+  if (root.localName === 'gpx') format = 'GPX'
+  else if (root.localName === 'TrainingCenterDatabase') format = 'TCX'
+  else throw new Error('GPXまたはTCX形式ではありません。')
 
+  const raw = format === 'GPX' ? gpxSegments(root) : tcxSegments(root)
+  const validSegments = raw.filter(points => points.length >= 2)
+  if (!validSegments.length) throw new Error('地図に描画できる座標が2点以上ありません。')
   const segments = validSegments.map(points => points.map(sample => sample.point))
-  const points = validSegments.flat()
-  const times = points.map(point => point.time).filter((value): value is number => value !== null)
-  const start = times.length ? times.reduce((a, b) => Math.min(a, b)) : null
-  const end = times.length ? times.reduce((a, b) => Math.max(a, b)) : null
+
+  let pointCount = 0
+  let start: number | null = null
+  let end: number | null = null
   let elevationGain = 0
   let hasElevation = false
+  // Do not flatten large activity arrays or allocate a separate list of times.
   for (const segment of validSegments) {
-    for (let i = 1; i < segment.length; i += 1) {
-      const previous = segment[i - 1].elevation
-      const current = segment[i].elevation
-      if (previous !== null && current !== null) {
+    pointCount += segment.length
+    for (let i = 0; i < segment.length; i += 1) {
+      const current = segment[i]
+      if (current.time !== null) {
+        start = start === null ? current.time : Math.min(start, current.time)
+        end = end === null ? current.time : Math.max(end, current.time)
+      }
+      if (i === 0) continue
+      const previousElevation = segment[i - 1].elevation
+      if (previousElevation !== null && current.elevation !== null) {
         hasElevation = true
-        elevationGain += Math.max(0, current - previous)
+        elevationGain += Math.max(0, current.elevation - previousElevation)
       }
     }
   }
 
-  const metadata = first(root, 'metadata')
+  const metadata = child(root, 'metadata')
+  const track = child(root, 'trk')
+  const route = child(root, 'rte')
+  const activity = format === 'TCX' ? descendants(root, 'Activity')[0] : undefined
   const title = format === 'GPX'
-    ? text(metadata ? first(metadata, 'name') : undefined) || text(first(root, 'trk') ? first(first(root, 'trk')!, 'name') : undefined)
-      || text(first(root, 'rte') ? first(first(root, 'rte')!, 'name') : undefined)
+    ? text(child(metadata, 'name')) || text(child(track, 'name')) || text(child(route, 'name'))
     : ''
-  const activityId = format === 'TCX' ? text(first(root, 'Activity') ? first(first(root, 'Activity')!, 'Id') : undefined) : ''
-  const metadataTime = metadata ? timestamp(text(first(metadata, 'time'))) : null
-  const fallbackTime = timestamp(activityId)
+  const metadataTime = timestamp(text(child(metadata, 'time')))
+  const fallbackTime = timestamp(text(child(activity, 'Id')))
   const date = start ?? metadataTime ?? fallbackTime
 
   return {
@@ -135,10 +148,12 @@ export function parseRide(xml: string, fileName: string, id: string): Ride {
     fileName,
     format,
     date: date === null ? null : new Date(date).toISOString(),
-    durationSeconds: start !== null && end !== null && end > start ? Math.round((end - start) / 1000) : null,
+    durationSeconds: start !== null && end !== null && end > start
+      ? Math.round((end - start) / 1000)
+      : null,
     distanceKm: segmentsDistanceMeters(segments) / 1000,
     elevationGainM: hasElevation ? Math.round(elevationGain) : null,
-    pointCount: points.length,
+    pointCount,
     segments,
     visible: true,
   }

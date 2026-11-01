@@ -1,11 +1,12 @@
 # 開発
 
-## 技術
+## 動作環境
 
-- React 18, TypeScript 5.6, Vite 6, Node.js 20, pnpm 9
-- Leaflet 1.9.4はCDN読み込み。OpenStreetMapのタイルを利用（利用規約・クレジットを遵守）。
+- Node.js 20 / pnpm 9.14.2（`.nvmrc`、`packageManager` に固定）
+- React 18 / TypeScript 5.6 / Vite 6
+- Leaflet 1.9.4（外部CDNで読み込み）、OpenStreetMap標準タイル
 
-## コマンド
+## ローカル操作
 
 ```sh
 corepack enable
@@ -15,17 +16,29 @@ pnpm test
 pnpm build
 ```
 
-`pnpm test` は測地線距離の計算、区間の独立性、座標の妥当性をNode.jsで検証します。
-XML解析にはブラウザ標準のDOMParserを使用するため、GPX/TCXの画面確認は同梱サンプルでも行います。
+`pnpm test` は TypeScriptの `geo.ts` をES Modulesとして `tests/dist/` に一時コンパイルし、Node.js組み込みテストで距離・区間境界・座標検証を行います。生成物はGit管理外です。古いCommonJSのセットアップは使用しません。
 
-## 開発ルール
+`pnpm build` はTypeScriptのチェックとViteの本番ビルドを行います。
 
-1. 開発は `develop` ブランチで行う。
-2. `develop` push時に検証し、成功したコミットを `/develop/` へデプロイ。
-3. `develop` → `main` のPRでレビューして本番反映。
-4. `main` は `/`、`develop` は `/develop/`。Viteのbaseに注意。
+## コード概要
 
-## プライバシー
+- `src/App.tsx`: ログの取込、状態管理、画面表示。非同期ファイル読み込みはrefで排他制御。
+- `src/MapView.tsx`: Leafletの初期化・破棄、経路とビュー範囲の独立管理。大型ログの座標配列展開を回避。
+- `src/lib/parser.ts`: ブラウザのDOMParserを使ったGPX/TCX解析。XML名前空間はlocalNameで判定。
+- `src/lib/geo.ts`: 地理計算の純粋関数。
+- `src/lib/rideColors.ts`: 地図経路と一覧に共通の色定義。
+- `public/samples/`: 位置情報を含む実利用者データではなく、架空の例。
+- `src/index.css`: 他のnaoiwサイトと整合したサイト共通トークンとアプリ固有スタイル。
 
-走行ログをGit管理に含めないこと。サンプルは模擬座標・模擬日時のみ。
-旧JourneyMap内のGoogle Maps APIキーや個人のGPXを移植しないこと。
+DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは公開プレビューでサンプルを読み込んで確認してください。NodeテストはXMLパーサーの網羅的検証を意味しません。
+
+## ブランチ運用
+
+1. 通常の修正は`develop`。
+2. `develop` push/PRは `Validate develop` CI（テスト・ビルド）で確認。
+3. developの検証成功で `/cycling-map/develop/` にデプロイ。
+4. `develop` → `main` PRマージで `/cycling-map/` へ本番反映。
+
+## 個人データの取り扱い
+
+個人のGPX・TCXログやAPIキーはGitへ含めない。旧JourneyMap内の個人データ・Google Mapsキーは移植しない。

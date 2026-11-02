@@ -1,6 +1,45 @@
-/** Shared palette for route lines and activity-list markers. */
-const RIDE_COLORS = ['#4964bd', '#ee7950', '#24a18a', '#9a68c8', '#b37a25', '#d35483', '#2379a0'] as const
+/** Colors used for the fixed, per-ride distance/elevation classifications. */
+export type ColorMode = 'manual' | 'distance' | 'elevation'
 
+export const COLOR_BANDS = [
+  { name: '水色', color: '#38BDF8', distance: '0～50 km未満', elevation: '0～500 m未満' },
+  { name: '緑', color: '#16A34A', distance: '50～100 km未満', elevation: '500～1,000 m未満' },
+  { name: '黄', color: '#EAB308', distance: '100～150 km未満', elevation: '1,000～1,500 m未満' },
+  { name: 'オレンジ', color: '#F97316', distance: '150～200 km未満', elevation: '1,500～2,000 m未満' },
+  { name: '赤', color: '#EF4444', distance: '200 km以上', elevation: '2,000 m以上' },
+] as const
+
+export const UNKNOWN_COLOR = '#94A3B8'
+const DEFAULT_COLORS = ['#4964bd', '#ee7950', '#24a18a', '#9a68c8', '#b37a25', '#d35483', '#2379a0'] as const
+
+/** Default palette for rides without an explicit manual selection. */
 export function rideColor(index: number): string {
-  return RIDE_COLORS[index % RIDE_COLORS.length]
+  return DEFAULT_COLORS[index % DEFAULT_COLORS.length]
+}
+
+/** Return an index into the five color bands, or null for missing/invalid data. */
+export function colorBandIndex(value: number | null, increment: number): number | null {
+  if (value === null || !Number.isFinite(value) || value < 0) return null
+  return Math.min(COLOR_BANDS.length - 1, Math.floor(value / increment))
+}
+
+type ColorableRide = {
+  distanceKm: number
+  elevationGainM: number | null
+}
+
+/** Single source of truth for route/list colors. Manual choices apply only in manual mode. */
+export function resolveRideColor(
+  ride: ColorableRide,
+  index: number,
+  mode: ColorMode,
+  manualColor: string | null = null,
+): string {
+  if (mode === 'manual') {
+    return COLOR_BANDS.find(band => band.color === manualColor)?.color ?? rideColor(index)
+  }
+  const bandIndex = mode === 'distance'
+    ? colorBandIndex(ride.distanceKm, 50)
+    : colorBandIndex(ride.elevationGainM, 500)
+  return bandIndex === null ? UNKNOWN_COLOR : COLOR_BANDS[bandIndex].color
 }

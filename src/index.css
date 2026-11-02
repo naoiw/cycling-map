@@ -427,3 +427,118 @@ h1, h2, p { margin: 0; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
 }
+
+/* Issue #8: route-color controls retain the existing dark theme. */
+.color-controls {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  padding: 0 24px 16px;
+}
+.color-controls-label {
+  color: var(--muted);
+  font-size: .78rem;
+  font-weight: 650;
+}
+.color-mode-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.color-mode-button {
+  min-height: 36px;
+  padding: 7px 14px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--soft);
+  color: var(--ink);
+  font-size: .78rem;
+  font-weight: 700;
+}
+.color-mode-button:hover { border-color: #58798d; }
+.color-mode-button.is-active {
+  border-color: var(--accent);
+  background: #244755;
+  color: #adfae8;
+}
+.color-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px 15px;
+  margin: 0 24px 16px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: #102335;
+}
+.color-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--ink);
+  font-size: .74rem;
+  white-space: nowrap;
+}
+.color-swatch {
+  display: inline-block;
+  flex: none;
+  width: 12px;
+  height: 12px;
+  border: 1px solid #ffffff42;
+  border-radius: 3px;
+}
+.ride-color-control {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 9px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: .72rem;
+}
+.ride-color-control select {
+  min-width: 0;
+  max-width: 100%;
+  min-height: 34px;
+  padding: 5px 29px 5px 9px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: var(--soft);
+  color: var(--ink);
+  font-size: .75rem;
+}
+.ride-color-control select:hover { border-color: #58798d; }
+@media (max-width: 1050px) {
+  .color-controls { padding: 0 19px 16px; }
+  .color-legend { margin: 0 19px 16px; }
+}
+@media (max-width: 620px) {
+  .color-controls { padding: 0 16px 14px; }
+  .color-legend { margin: 0 16px 14px; }
+}
+
+/* Issue #10: export controls share the dark-site chrome without modifying the map. */
+.export-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 22px 12px;
+}
+.export-controls .button { flex: 1 1 190px; }
+.export-note {
+  padding: 0 22px 21px;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.7;
+}
+.export-error {
+  margin: 0 22px 12px;
+  padding: 10px 12px;
+  border: 1px solid #91555c;
+  border-radius: 8px;
+  background: #42252b;
+  color: #ffc5c3;
+  font-size: .78rem;
+}
+@media (max-width: 620px) {
+  .export-controls { padding: 0 15px 12px; }
+  .export-note { padding: 0 15px 16px; }
+  .export-error { margin: 0 15px 12px; }
+}

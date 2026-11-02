@@ -26,15 +26,28 @@ pnpm build
 - `src/MapView.tsx`: Leafletの初期化・破棄、経路とビュー範囲の独立管理。大型ログの座標配列展開を回避。
 - `src/lib/parser.ts`: ブラウザのDOMParserを使ったGPX/TCX解析。XML名前空間はlocalNameで判定。
 - `src/lib/geo.ts`: 地理計算の純粋関数。
-- `src/lib/rideColors.ts`: 地図経路と一覧に共通の色定義。
+- `src/lib/rideColors.ts`: 既定色・固定5段階自動色分け・手動モードの色指定を排他的に切り替える純粋関数。地図経路と一覧に共用。
+- `src/lib/exportGeometry.ts`: エクスポート対象、Web Mercator投影、表示範囲、統計表示文字列、ファイル名の純粋関数。
+- `src/lib/exportPng.ts`: Canvas上でOSMタイル・ポリライン・統計を合成しPNG Blobを返す。#11と共用できるようUIから独立。
 - `public/samples/`: 公開サンプル用の4つの `yymmdd.gpx` と配置手順。
 - `scripts/generate-sample-index.mjs`: dev/build前にサンプルを走査して `public/samples/index.json` を生成。
 - `tests/samples.test.mjs`: 日付ファイル名のフィルタリング、最大件数のテスト。
+- `tests/rideColors.test.mjs`: 距離・獲得標高の境界値、欠損値、手動色優先のテスト。
+- `tests/exportGeometry.test.mjs`: PNG対象の可視判定、全経路フィット、集計、ファイル名のテスト。
 - `src/index.css`: 他のnaoiwサイトと整合したサイト共通トークンとアプリ固有スタイル。
 
 開発サーバー起動後にサンプルを増減した場合は、`pnpm dev` を再起動してください。`pnpm exec vite build` 単独ではインデックスの自動生成が実行されないので、原則 `pnpm build` を使用してください。develop用のPagesワークフローは明示的に生成スクリプトを実行します。
 
-DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは公開プレビューでサンプルを読み込んで確認してください。NodeテストはXMLパーサーの網羅的検証を意味しません。
+DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは公開プレビューでサンプルを読み込んで確認してください。NodeテストはXMLパーサーの網羅的検証を意味しません。色分け機能はサンプル4件を読み込み、初期状態で「手動」が選択されていること、距離別・獲得標高別で手動色プルダウンが無効になること、凡例と区分色の一致、手動へ戻した際の以前の色設定、非表示／再表示による色の維持をプレビュー画面で確認してください。
+
+## PNG保存の確認
+
+1. `pnpm test && pnpm build` を実行する。
+2. developプレビューで4件のサンプルを読み込み、距離・獲得標高・手動色を切替え、両PNGボタンで1600×900の画像が保存されるか確認する。
+3. 1件を非表示にしてから保存し、地図と統計に含まれないことを確認する。
+4. 標高情報のないTCX/GPXでも統計に欠損表示がされるか確認する。
+5. ネットワーク切断／CORS失敗時にエラーメッセージを表示し、不完全なPNGが保存されないことを確認する。**タイルサーバーのCORS実動作はNodeテストの対象外なのでブラウザで要確認。**
+6. OpenStreetMapタイルの利用ポリシー（https://operations.osmfoundation.org/policies/tiles/）に従い、リクエストはクリック時に表示対象の必要分だけ行う。連続した過度な保存は避ける。
 
 ## ブランチ運用
 

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Ride } from './lib/parser'
 import type { Point } from './lib/geo'
-import { rideColor } from './lib/rideColors'
 
 /** The small subset of the globally loaded Leaflet API needed by this component. */
 interface MapBounds {
@@ -33,8 +32,9 @@ function leaflet(): LeafletApi | undefined {
   return (window as Window & { L?: LeafletApi }).L
 }
 
-export default function MapView({ rides, focus, fitAllNonce }: {
+export default function MapView({ rides, colors, focus, fitAllNonce }: {
   rides: Ride[]
+  colors: readonly string[]
   focus: FocusRequest
   fitAllNonce: number
 }) {
@@ -85,7 +85,7 @@ export default function MapView({ rides, focus, fitAllNonce }: {
     rides.forEach((ride, index) => {
       if (!ride.visible) return
       for (const segment of ride.segments) {
-        L.polyline(segment, { color: rideColor(index), weight: 4, opacity: 0.83, lineCap: 'round' }).addTo(layer)
+        L.polyline(segment, { color: colors[index], weight: 4, opacity: 0.83, lineCap: 'round' }).addTo(layer)
         // Extend the bounds incrementally: spreading tens of thousands of points
         // into an array push can exceed the JS engine's argument limit.
         for (const point of segment) {
@@ -105,7 +105,7 @@ export default function MapView({ rides, focus, fitAllNonce }: {
       if (bounds.isValid()) map.fitBounds(bounds, { padding: [32, 32], maxZoom: 14 })
     }
     lastViewportRef.current = { focusNonce: focus?.nonce ?? last.focusNonce, fitAllNonce }
-  }, [rides, focus, fitAllNonce])
+  }, [rides, colors, focus, fitAllNonce])
 
   return (
     <div className="map-surface">

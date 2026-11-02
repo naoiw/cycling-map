@@ -3,7 +3,7 @@ export type ColorMode = 'default' | 'distance' | 'elevation'
 
 export const COLOR_BANDS = [
   { name: '水色', color: '#38BDF8', distance: '0～50 km未満', elevation: '0～500 m未満' },
-  { name: '緑', color: '#22C55E', distance: '50～100 km未満', elevation: '500～1,000 m未満' },
+  { name: '緑', color: '#16A34A', distance: '50～100 km未満', elevation: '500～1,000 m未満' },
   { name: '黄', color: '#EAB308', distance: '100～150 km未満', elevation: '1,000～1,500 m未満' },
   { name: 'オレンジ', color: '#F97316', distance: '150～200 km未満', elevation: '1,500～2,000 m未満' },
   { name: '赤', color: '#EF4444', distance: '200 km以上', elevation: '2,000 m以上' },

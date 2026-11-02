@@ -4,6 +4,13 @@ import { COLOR_BANDS, UNKNOWN_COLOR, colorBandIndex, resolveRideColor, rideColor
 
 const item = (distanceKm, elevationGainM) => ({ distanceKm, elevationGainM })
 
+test('green band uses the darker map-visible green', () => {
+  assert.equal(COLOR_BANDS[1].color, '#16A34A')
+  assert.equal(resolveRideColor(item(50, 500), 0, 'distance'), '#16A34A')
+  assert.equal(resolveRideColor(item(50, 500), 0, 'elevation'), '#16A34A')
+  assert.equal(resolveRideColor(item(0, 0), 0, 'default', '#16A34A'), '#16A34A')
+})
+
 test('five fixed distance bands, including exact boundary values', () => {
   const values = [0, 49.999, 50, 99.999, 100, 149.999, 150, 199.999, 200, 900]
   const bands = [0, 0, 1, 1, 2, 2, 3, 3, 4, 4]

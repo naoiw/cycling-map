@@ -26,15 +26,16 @@ pnpm build
 - `src/MapView.tsx`: Leafletの初期化・破棄、経路とビュー範囲の独立管理。大型ログの座標配列展開を回避。
 - `src/lib/parser.ts`: ブラウザのDOMParserを使ったGPX/TCX解析。XML名前空間はlocalNameで判定。
 - `src/lib/geo.ts`: 地理計算の純粋関数。
-- `src/lib/rideColors.ts`: 地図経路と一覧に共通の色定義。
+- `src/lib/rideColors.ts`: 既定色・固定5段階自動色分け・手動指定を統合する純粋関数。地図経路と一覧に共用。
 - `public/samples/`: 公開サンプル用の4つの `yymmdd.gpx` と配置手順。
 - `scripts/generate-sample-index.mjs`: dev/build前にサンプルを走査して `public/samples/index.json` を生成。
 - `tests/samples.test.mjs`: 日付ファイル名のフィルタリング、最大件数のテスト。
+- `tests/rideColors.test.mjs`: 距離・獲得標高の境界値、欠損値、手動色優先のテスト。
 - `src/index.css`: 他のnaoiwサイトと整合したサイト共通トークンとアプリ固有スタイル。
 
 開発サーバー起動後にサンプルを増減した場合は、`pnpm dev` を再起動してください。`pnpm exec vite build` 単独ではインデックスの自動生成が実行されないので、原則 `pnpm build` を使用してください。develop用のPagesワークフローは明示的に生成スクリプトを実行します。
 
-DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは公開プレビューでサンプルを読み込んで確認してください。NodeテストはXMLパーサーの網羅的検証を意味しません。
+DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは公開プレビューでサンプルを読み込んで確認してください。NodeテストはXMLパーサーの網羅的検証を意味しません。色分け機能はサンプル4件を読み込み、距離別・獲得標高別のボタンと凡例、手動色プルダウン、非表示／再表示による色の維持をプレビュー画面で確認してください。
 
 ## ブランチ運用
 

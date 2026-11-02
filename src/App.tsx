@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import MapView from './MapView'
 import { parseRide, type Ride } from './lib/parser'
-import { rideColor } from './lib/rideColors'
+import { COLOR_BANDS, UNKNOWN_COLOR, resolveRideColor, type ColorMode } from './lib/rideColors'
 import { summarizeVisibleRides } from './lib/rideStats'
 
 const dateLabel = (date: string | null) => date
@@ -20,11 +20,17 @@ function App() {
   const importingRef = useRef(false)
   const focusNonceRef = useRef(0)
   const [rides, setRides] = useState<Ride[]>([])
+  const [colorMode, setColorMode] = useState<ColorMode>('default')
+  const [manualColors, setManualColors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
   const [focus, setFocus] = useState<{ id: string; nonce: number } | null>(null)
   const [fitAllNonce, setFitAllNonce] = useState(0)
   const stats = useMemo(() => summarizeVisibleRides(rides), [rides])
+  const routeColors = useMemo(
+    () => rides.map((ride, index) => resolveRideColor(ride, index, colorMode, manualColors[ride.id] ?? null)),
+    [rides, colorMode, manualColors],
+  )
   const sorted = useMemo(() => [...rides].sort((a, b) => {
     if (a.date === null) return 1
     if (b.date === null) return -1
@@ -128,7 +134,20 @@ function App() {
   }
   function remove(id: string) {
     setRides(previous => previous.filter(ride => ride.id !== id))
+    setManualColors(previous => {
+      const next = { ...previous }
+      delete next[id]
+      return next
+    })
     setFocus(null)
+  }
+  function selectManualColor(id: string, color: string) {
+    setManualColors(previous => {
+      const next = { ...previous }
+      if (COLOR_BANDS.some(band => band.color === color)) next[id] = color
+      else delete next[id]
+      return next
+    })
   }
 
   return (
@@ -158,7 +177,30 @@ function App() {
                 <div><p className="section-kicker">ROUTE MAP</p><h2 id="map-title">走行経路</h2></div>
                 <button className="button button--secondary" disabled={!stats.visibleCount} onClick={() => { setFocus(null); setFitAllNonce(value => value + 1) }} type="button">全経路に合わせる</button>
               </div>
-              <MapView rides={rides} focus={focus} fitAllNonce={fitAllNonce} />
+              <div className="color-controls" role="group" aria-label="経路の自動色分け">
+                <span className="color-controls-label">経路の色分け</span>
+                <div className="color-mode-buttons">
+                  <button className={'color-mode-button' + (colorMode === 'distance' ? ' is-active' : '')} type="button" aria-pressed={colorMode === 'distance'} onClick={() => setColorMode(current => current === 'distance' ? 'default' : 'distance')}>距離別</button>
+                  <button className={'color-mode-button' + (colorMode === 'elevation' ? ' is-active' : '')} type="button" aria-pressed={colorMode === 'elevation'} onClick={() => setColorMode(current => current === 'elevation' ? 'default' : 'elevation')}>獲得標高別</button>
+                </div>
+              </div>
+              {colorMode !== 'default' && (
+                <div className="color-legend" aria-label={colorMode === 'distance' ? '走行距離の色分け凡例' : '獲得標高の色分け凡例'}>
+                  {COLOR_BANDS.map(band => (
+                    <span className="color-legend-item" key={band.color}>
+                      <span className="color-swatch" style={{ backgroundColor: band.color }} aria-hidden="true" />
+                      {colorMode === 'distance' ? band.distance : band.elevation}
+                    </span>
+                  ))}
+                  {colorMode === 'elevation' && (
+                    <span className="color-legend-item">
+                      <span className="color-swatch" style={{ backgroundColor: UNKNOWN_COLOR }} aria-hidden="true" />
+                      標高データなし
+                    </span>
+                  )}
+                </div>
+              )}
+              <MapView rides={rides} colors={routeColors} focus={focus} fitAllNonce={fitAllNonce} />
               <div className="map-footer"><span>OpenStreetMap / Leaflet</span><span>表示中の記録を地図に重ねて描画</span></div>
             </section>
             <aside className="panel side-panel" aria-label="ファイルと走行記録">
@@ -190,20 +232,27 @@ function App() {
                       <li key={ride.id} className={'ride-item' + (ride.visible ? '' : ' muted-ride')}>
                         <label className="ride-check">
                           <input type="checkbox" checked={ride.visible} onChange={() => toggle(ride.id)} aria-label={ride.name + 'を地図に表示'} />
-                          <span className="ride-dot" style={{ backgroundColor: rideColor(rides.findIndex(item => item.id === ride.id)) }} />
+                          <span className="ride-dot" style={{ backgroundColor: routeColors[rides.indexOf(ride)] }} />
                         </label>
                         <div className="ride-content">
                           <button className="ride-title" type="button" onClick={() => { if (!ride.visible) setRides(previous => previous.map(item => item.id === ride.id ? { ...item, visible: true } : item)); setFocus({ id: ride.id, nonce: ++focusNonceRef.current }) }}>{ride.name}</button>
                           <div className="ride-date">{dateLabel(ride.date)} <span className="format-tag">{ride.format}</span></div>
                           <div className="ride-meta"><strong>{km(ride.distanceKm)} km</strong><span>{durationLabel(ride.durationSeconds)}</span></div>
                           <div className="ride-extra">{ride.pointCount.toLocaleString('ja-JP')} ポイント{ride.elevationGainM !== null ? ' / 獲得標高 ' + ride.elevationGainM.toLocaleString('ja-JP') + ' m' : ''}</div>
+                          <label className="ride-color-control">
+                            <span>経路色</span>
+                            <select value={manualColors[ride.id] ?? ''} onChange={event => selectManualColor(ride.id, event.target.value)} aria-label={ride.name + 'の経路色'}>
+                              <option value="">自動／既定色に従う</option>
+                              {COLOR_BANDS.map(band => <option key={band.color} value={band.color}>{band.name}</option>)}
+                            </select>
+                          </label>
                         </div>
                         <button className="remove-button" type="button" onClick={() => remove(ride.id)} aria-label={ride.name + 'を削除'} title="この記録を削除">×</button>
                       </li>
                     ))}
                   </ul>
                 )}
-                {rides.length > 0 && <button className="clear-button" type="button" onClick={() => { if (window.confirm('読み込んだ走行記録をすべて削除しますか？')) { setRides([]); setFocus(null); setErrors([]) } }}>すべて削除</button>}
+                {rides.length > 0 && <button className="clear-button" type="button" onClick={() => { if (window.confirm('読み込んだ走行記録をすべて削除しますか？')) { setRides([]); setManualColors({}); setFocus(null); setErrors([]) } }}>すべて削除</button>}
               </section>
             </aside>
           </div>

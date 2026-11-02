@@ -28,12 +28,14 @@ pnpm build
 - `src/lib/geo.ts`: 地理計算の純粋関数。
 - `src/lib/rideColors.ts`: 既定色・固定5段階自動色分け・手動指定を統合する純粋関数。地図経路と一覧に共用。
 - `src/lib/exportGeometry.ts`: エクスポート対象、Web Mercator投影、表示範囲、統計表示文字列、ファイル名の純粋関数。
-- `src/lib/exportPng.ts`: Canvas上でOSMタイル・ポリライン・統計を合成しPNG Blobを返す。#11と共用できるようUIから独立。
+- `src/lib/exportPng.ts`: Canvas上でOSMタイル・ポリライン・統計を合成しPNG Blobを返す。#10保存・#11共有に共通。
+- `src/lib/shareRide.ts`: 表示中の集計から事実に沿ったX投稿本文とWeb Intent URLを作る純粋関数。
 - `public/samples/`: 公開サンプル用の4つの `yymmdd.gpx` と配置手順。
 - `scripts/generate-sample-index.mjs`: dev/build前にサンプルを走査して `public/samples/index.json` を生成。
 - `tests/samples.test.mjs`: 日付ファイル名のフィルタリング、最大件数のテスト。
 - `tests/rideColors.test.mjs`: 距離・獲得標高の境界値、欠損値、手動色優先のテスト。
 - `tests/exportGeometry.test.mjs`: PNG対象の可視判定、全経路フィット、集計、ファイル名のテスト。
+- `tests/shareRide.test.mjs`: 非表示データを除外した本文、標高欠損の明示、Web Intent URLエンコードのテスト。
 - `src/index.css`: 他のnaoiwサイトと整合したサイト共通トークンとアプリ固有スタイル。
 
 開発サーバー起動後にサンプルを増減した場合は、`pnpm dev` を再起動してください。`pnpm exec vite build` 単独ではインデックスの自動生成が実行されないので、原則 `pnpm build` を使用してください。develop用のPagesワークフローは明示的に生成スクリプトを実行します。
@@ -48,6 +50,15 @@ DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは�
 4. 標高情報のないTCX/GPXでも統計に欠損表示がされるか確認する。
 5. ネットワーク切断／CORS失敗時にエラーメッセージを表示し、不完全なPNGが保存されないことを確認する。**タイルサーバーのCORS実動作はNodeテストの対象外なのでブラウザで要確認。**
 6. OpenStreetMapタイルの利用ポリシー（https://operations.osmfoundation.org/policies/tiles/）に従い、リクエストはクリック時に表示対象の必要分だけ行う。連続した過度な保存は避ける。
+
+## X共有の確認
+
+1. 4件のサンプル経路を読み込み、1件を非表示にして「Xで共有」。テキストが表示中件数・距離・獲得標高と一致することを確認する。
+2. テキスト欄を編集し、X投稿画面を開くと編集後本文が入力されることを確認。投稿は行わない。
+3. 「共有用PNGを保存」で経路画像・配色・OSM帰属表示を確認。「本文をコピー」が動作することを確認する。
+4. Web Share APIの対応端末なら「画像と本文を共有」から共有画面が開くことを確認し、ユーザー操作でキャンセルできることを確認する。
+5. 経路の表示・色を変更すると、旧共有内容が無効化されることを確認する。
+6. Web Share API非対応環境でもPNG保存・本文コピー・X投稿画面へ移動できることを確認する。
 
 ## ブランチ運用
 

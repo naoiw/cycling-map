@@ -1,10 +1,11 @@
-import { useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type DragEvent } from 'react'
 import MapView from './MapView'
 import { parseRide, type Ride } from './lib/parser'
 import { COLOR_BANDS, UNKNOWN_COLOR, resolveRideColor, type ColorMode } from './lib/rideColors'
 import { summarizeVisibleRides } from './lib/rideStats'
 import { downloadPng, generateRidePng } from './lib/exportPng'
 import { exportFilename, type ExportVariant } from './lib/exportGeometry'
+import { makeShareText, xComposeUrl } from './lib/shareRide'
 
 const dateLabel = (date: string | null) => date
   ? new Date(date).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -26,8 +27,15 @@ function App() {
   const [manualColors, setManualColors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const exportLock = useRef(false)
+  const shareRequest = useRef(0)
+  const shareTextRef = useRef<HTMLTextAreaElement>(null)
   const [exporting, setExporting] = useState<ExportVariant | null>(null)
   const [exportError, setExportError] = useState('')
+  const [shareBusy, setShareBusy] = useState(false)
+  const [shareDraft, setShareDraft] = useState<{ image: Blob; filename: string } | null>(null)
+  const [shareText, setShareText] = useState('')
+  const [shareError, setShareError] = useState('')
+  const [shareNotice, setShareNotice] = useState('')
   const [errors, setErrors] = useState<string[]>([])
   const [focus, setFocus] = useState<{ id: string; nonce: number } | null>(null)
   const [fitAllNonce, setFitAllNonce] = useState(0)
@@ -36,6 +44,25 @@ function App() {
     () => rides.map((ride, index) => resolveRideColor(ride, index, colorMode, manualColors[ride.id] ?? null)),
     [rides, colorMode, manualColors],
   )
+  // Never offer a stale screenshot or figures after tracks, visibility or colors change.
+  useEffect(() => {
+    shareRequest.current += 1
+    setShareDraft(null)
+    setShareText('')
+    setShareError('')
+    setShareNotice('')
+  }, [rides, routeColors])
+
+  const nativeShareAvailable = useMemo(() => {
+    if (!shareDraft || typeof navigator.share !== 'function' || typeof navigator.canShare !== 'function') return false
+    try {
+      const file = new File([shareDraft.image], shareDraft.filename, { type: 'image/png' })
+      return navigator.canShare({ files: [file] })
+    } catch {
+      return false
+    }
+  }, [shareDraft])
+
   const sorted = useMemo(() => [...rides].sort((a, b) => {
     if (a.date === null) return 1
     if (b.date === null) return -1
@@ -145,6 +172,62 @@ function App() {
     }
   }
 
+  async function prepareXShare() {
+    if (exportLock.current || !rides.some(ride => ride.visible)) return
+    exportLock.current = true
+    const request = ++shareRequest.current
+    setShareBusy(true)
+    setShareDraft(null)
+    setShareError('')
+    setShareNotice('')
+    try {
+      // Screenshot and text are generated from the same snapshot of visible rides.
+      const text = makeShareText(rides)
+      const image = await generateRidePng(rides, routeColors, 'map')
+      if (request !== shareRequest.current) return
+      setShareText(text)
+      setShareDraft({ image, filename: exportFilename('map', new Date()) })
+    } catch (error) {
+      if (request === shareRequest.current) {
+        setShareError(error instanceof Error ? error.message : '共有画像の生成に失敗しました。')
+      }
+    } finally {
+      exportLock.current = false
+      setShareBusy(false)
+    }
+  }
+
+  async function sharePngAndText() {
+    if (!shareDraft || !nativeShareAvailable) return
+    const file = new File([shareDraft.image], shareDraft.filename, { type: 'image/png' })
+    setShareError('')
+    setShareNotice('')
+    try {
+      // Share must be invoked directly from this click, not after async PNG generation.
+      await navigator.share({ files: [file], text: shareText })
+      setShareNotice('共有メニューからの操作が完了しました。')
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        setShareNotice('共有操作をキャンセルしました。')
+      } else {
+        setShareError('画像付き共有に失敗しました。下の画像保存と本文コピーを利用してください。')
+      }
+    }
+  }
+
+  async function copyShareText() {
+    setShareError('')
+    setShareNotice('')
+    try {
+      await navigator.clipboard.writeText(shareText)
+      setShareNotice('投稿本文をコピーしました。')
+    } catch {
+      shareTextRef.current?.focus()
+      shareTextRef.current?.select()
+      setShareNotice('本文を選択しました。コピーしてXの投稿画面に貼り付けてください。')
+    }
+  }
+
   function toggle(id: string) {
     setRides(previous => previous.map(ride => ride.id === id ? { ...ride, visible: !ride.visible } : ride))
     setFocus(null)
@@ -224,15 +307,47 @@ function App() {
               <MapView rides={rides} colors={routeColors} focus={focus} fitAllNonce={fitAllNonce} />
               <div className="map-footer"><span>OpenStreetMap / Leaflet</span><span>表示中の記録を地図に重ねて描画</span></div>
               <div className="export-controls" aria-label="走行経路の画像保存">
-                <button className="button button--secondary" type="button" disabled={!stats.visibleCount || exporting !== null} onClick={() => { void savePng('map') }}>
+                <button className="button button--secondary" type="button" disabled={!stats.visibleCount || exporting !== null || shareBusy} onClick={() => { void savePng('map') }}>
                   {exporting === 'map' ? 'PNG生成中…' : '地図をPNG保存'}
                 </button>
-                <button className="button button--secondary" type="button" disabled={!stats.visibleCount || exporting !== null} onClick={() => { void savePng('stats') }}>
+                <button className="button button--secondary" type="button" disabled={!stats.visibleCount || exporting !== null || shareBusy} onClick={() => { void savePng('stats') }}>
                   {exporting === 'stats' ? 'PNG生成中…' : '統計付きPNG保存'}
                 </button>
               </div>
               {exportError && <p className="export-error" role="alert">{exportError}</p>}
               <p className="export-note">表示中の経路のみ保存します。画像には位置情報が含まれます。</p>
+              <section className="share-section" aria-label="Xへの走行記録共有">
+                <div className="share-section-header">
+                  <div>
+                    <span className="share-kicker">SHARE</span>
+                    <h3>Xで共有</h3>
+                  </div>
+                  <button type="button" className="button button--primary" disabled={!stats.visibleCount || shareBusy || exporting !== null} onClick={() => { void prepareXShare() }}>
+                    {shareBusy ? '共有画像を生成中…' : 'Xで共有'}
+                  </button>
+                </div>
+                <p className="share-privacy">公開すると自宅周辺などの経路・行動範囲が分かる可能性があります。投稿前に画像と本文を確認してください。</p>
+                {shareError && <p className="export-error share-alert" role="alert">{shareError}</p>}
+                {shareDraft && (
+                  <div className="share-draft">
+                    <label htmlFor="share-post-text">投稿本文（編集できます）</label>
+                    <textarea id="share-post-text" ref={shareTextRef} rows={5} value={shareText} onChange={event => { setShareText(event.target.value); setShareNotice('') }} />
+                    <p className="share-hint">画像は「地図のみ」のPNGです。本文と画像は作成時点の表示中ライドを対象にしています。</p>
+                    <div className="share-actions">
+                      {nativeShareAvailable && (
+                        <button type="button" className="button button--primary" onClick={() => { void sharePngAndText() }}>画像と本文を共有</button>
+                      )}
+                      <button type="button" className="button button--secondary" onClick={() => downloadPng(shareDraft.image, shareDraft.filename)}>共有用PNGを保存</button>
+                      <button type="button" className="button button--secondary" onClick={() => { void copyShareText() }}>本文をコピー</button>
+                      <a className="button button--secondary" href={xComposeUrl(shareText)} target="_blank" rel="noopener noreferrer">Xの投稿画面を開く</a>
+                    </div>
+                    <p className="share-hint">{nativeShareAvailable
+                      ? '端末の共有メニューからXを選択できます。Xが共有先に表示されるかは端末によって異なります。'
+                      : '画像の自動添付には対応していない環境です。PNGを保存してXの投稿画面で手動添付してください。'}</p>
+                    {shareNotice && <p className="share-notice" role="status">{shareNotice}</p>}
+                  </div>
+                )}
+              </section>
             </section>
             <aside className="panel side-panel" aria-label="ファイルと走行記録">
               <section className="side-section">

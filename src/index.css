@@ -513,3 +513,32 @@ h1, h2, p { margin: 0; }
   .color-controls { padding: 0 16px 14px; }
   .color-legend { margin: 0 16px 14px; }
 }
+
+/* Issue #10: export controls share the dark-site chrome without modifying the map. */
+.export-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 0 22px 12px;
+}
+.export-controls .button { flex: 1 1 190px; }
+.export-note {
+  padding: 0 22px 21px;
+  color: var(--muted);
+  font-size: .72rem;
+  line-height: 1.7;
+}
+.export-error {
+  margin: 0 22px 12px;
+  padding: 10px 12px;
+  border: 1px solid #91555c;
+  border-radius: 8px;
+  background: #42252b;
+  color: #ffc5c3;
+  font-size: .78rem;
+}
+@media (max-width: 620px) {
+  .export-controls { padding: 0 15px 12px; }
+  .export-note { padding: 0 15px 16px; }
+  .export-error { margin: 0 15px 12px; }
+}

@@ -3,6 +3,8 @@ import MapView from './MapView'
 import { parseRide, type Ride } from './lib/parser'
 import { COLOR_BANDS, UNKNOWN_COLOR, resolveRideColor, type ColorMode } from './lib/rideColors'
 import { summarizeVisibleRides } from './lib/rideStats'
+import { downloadPng, generateRidePng } from './lib/exportPng'
+import { exportFilename, type ExportVariant } from './lib/exportGeometry'
 
 const dateLabel = (date: string | null) => date
   ? new Date(date).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -23,6 +25,9 @@ function App() {
   const [colorMode, setColorMode] = useState<ColorMode>('default')
   const [manualColors, setManualColors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
+  const exportLock = useRef(false)
+  const [exporting, setExporting] = useState<ExportVariant | null>(null)
+  const [exportError, setExportError] = useState('')
   const [errors, setErrors] = useState<string[]>([])
   const [focus, setFocus] = useState<{ id: string; nonce: number } | null>(null)
   const [fitAllNonce, setFitAllNonce] = useState(0)
@@ -124,6 +129,22 @@ function App() {
     void importFiles(Array.from(event.dataTransfer.files))
   }
 
+  async function savePng(variant: ExportVariant) {
+    if (exportLock.current || !rides.some(ride => ride.visible)) return
+    exportLock.current = true
+    setExporting(variant)
+    setExportError('')
+    try {
+      const blob = await generateRidePng(rides, routeColors, variant)
+      downloadPng(blob, exportFilename(variant, new Date()))
+    } catch (error) {
+      setExportError(error instanceof Error ? error.message : 'PNGの保存に失敗しました。')
+    } finally {
+      exportLock.current = false
+      setExporting(null)
+    }
+  }
+
   function toggle(id: string) {
     setRides(previous => previous.map(ride => ride.id === id ? { ...ride, visible: !ride.visible } : ride))
     setFocus(null)
@@ -202,6 +223,16 @@ function App() {
               )}
               <MapView rides={rides} colors={routeColors} focus={focus} fitAllNonce={fitAllNonce} />
               <div className="map-footer"><span>OpenStreetMap / Leaflet</span><span>表示中の記録を地図に重ねて描画</span></div>
+              <div className="export-controls" aria-label="走行経路の画像保存">
+                <button className="button button--secondary" type="button" disabled={!stats.visibleCount || exporting !== null} onClick={() => { void savePng('map') }}>
+                  {exporting === 'map' ? 'PNG生成中…' : '地図をPNG保存'}
+                </button>
+                <button className="button button--secondary" type="button" disabled={!stats.visibleCount || exporting !== null} onClick={() => { void savePng('stats') }}>
+                  {exporting === 'stats' ? 'PNG生成中…' : '統計付きPNG保存'}
+                </button>
+              </div>
+              {exportError && <p className="export-error" role="alert">{exportError}</p>}
+              <p className="export-note">表示中の経路のみ保存します。画像には位置情報が含まれます。</p>
             </section>
             <aside className="panel side-panel" aria-label="ファイルと走行記録">
               <section className="side-section">

@@ -1,5 +1,5 @@
 /** Colors used for the fixed, per-ride distance/elevation classifications. */
-export type ColorMode = 'default' | 'distance' | 'elevation'
+export type ColorMode = 'manual' | 'distance' | 'elevation'
 
 export const COLOR_BANDS = [
   { name: '水色', color: '#38BDF8', distance: '0～50 km未満', elevation: '0～500 m未満' },
@@ -12,7 +12,7 @@ export const COLOR_BANDS = [
 export const UNKNOWN_COLOR = '#94A3B8'
 const DEFAULT_COLORS = ['#4964bd', '#ee7950', '#24a18a', '#9a68c8', '#b37a25', '#d35483', '#2379a0'] as const
 
-/** Preserves the existing automatic palette, including on initial page load. */
+/** Default palette for rides without an explicit manual selection. */
 export function rideColor(index: number): string {
   return DEFAULT_COLORS[index % DEFAULT_COLORS.length]
 }
@@ -28,17 +28,16 @@ type ColorableRide = {
   elevationGainM: number | null
 }
 
-/** Single source of truth for line colors and list markers. Manual color wins. */
+/** Single source of truth for route/list colors. Manual choices apply only in manual mode. */
 export function resolveRideColor(
   ride: ColorableRide,
   index: number,
   mode: ColorMode,
   manualColor: string | null = null,
 ): string {
-  const selected = COLOR_BANDS.find(band => band.color === manualColor)
-  if (selected) return selected.color
-
-  if (mode === 'default') return rideColor(index)
+  if (mode === 'manual') {
+    return COLOR_BANDS.find(band => band.color === manualColor)?.color ?? rideColor(index)
+  }
   const bandIndex = mode === 'distance'
     ? colorBandIndex(ride.distanceKm, 50)
     : colorBandIndex(ride.elevationGainM, 500)

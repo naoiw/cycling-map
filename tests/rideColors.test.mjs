@@ -8,7 +8,7 @@ test('green band uses the darker map-visible green', () => {
   assert.equal(COLOR_BANDS[1].color, '#16A34A')
   assert.equal(resolveRideColor(item(50, 500), 0, 'distance'), '#16A34A')
   assert.equal(resolveRideColor(item(50, 500), 0, 'elevation'), '#16A34A')
-  assert.equal(resolveRideColor(item(0, 0), 0, 'default', '#16A34A'), '#16A34A')
+  assert.equal(resolveRideColor(item(0, 0), 0, 'manual', '#16A34A'), '#16A34A')
 })
 
 test('five fixed distance bands, including exact boundary values', () => {
@@ -35,15 +35,25 @@ test('invalid or negative values use the neutral color in automatic modes', () =
   }
 })
 
-test('manual colors override any mode, including missing data, and unset restores default', () => {
+test('manual colors are selected only in manual mode; automatic modes ignore stored selections', () => {
   const ride = item(220, null)
-  assert.equal(resolveRideColor(ride, 2, 'distance', COLOR_BANDS[1].color), COLOR_BANDS[1].color)
-  assert.equal(resolveRideColor(ride, 2, 'elevation', COLOR_BANDS[1].color), COLOR_BANDS[1].color)
-  assert.equal(resolveRideColor(ride, 2, 'default', COLOR_BANDS[1].color), COLOR_BANDS[1].color)
+  const selected = COLOR_BANDS[1].color
+  assert.equal(resolveRideColor(ride, 2, 'manual', selected), selected)
+  assert.equal(resolveRideColor(ride, 2, 'manual'), rideColor(2))
+  assert.equal(resolveRideColor(ride, 2, 'manual', '#ffffff'), rideColor(2))
+  assert.equal(resolveRideColor(ride, 2, 'distance', selected), COLOR_BANDS[4].color)
+  assert.equal(resolveRideColor(ride, 2, 'elevation', selected), UNKNOWN_COLOR)
   assert.equal(resolveRideColor(ride, 2, 'distance'), COLOR_BANDS[4].color)
   assert.equal(resolveRideColor(ride, 2, 'elevation'), UNKNOWN_COLOR)
-  assert.equal(resolveRideColor(ride, 2, 'default'), rideColor(2))
-  assert.equal(resolveRideColor(ride, 2, 'distance', '#ffffff'), COLOR_BANDS[4].color)
+})
+
+test('switching modes does not change the explicit manual color stored by the UI', () => {
+  const ride = item(75, 1500)
+  const choice = COLOR_BANDS[4].color
+  assert.equal(resolveRideColor(ride, 1, 'manual', choice), choice)
+  assert.equal(resolveRideColor(ride, 1, 'distance', choice), COLOR_BANDS[1].color)
+  assert.equal(resolveRideColor(ride, 1, 'elevation', choice), COLOR_BANDS[3].color)
+  assert.equal(resolveRideColor(ride, 1, 'manual', choice), choice)
 })
 
 test('classification is independent of other rides and visibility', () => {

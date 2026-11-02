@@ -55,7 +55,9 @@ test('crossing the antimeridian uses a compact viewport', () => {
   const view = mapViewport(entries, rect)
   const [left] = pixelFor(10, 179.8, view)
   const [right] = pixelFor(10.1, -179.8, view)
-  assert.ok(Math.abs(left - right) < rect.width / 2)
+  assert.ok(view.zoom >= 8, 'worldwide zoom should not be chosen for a short crossing')
+  assert.ok(left >= 50 && left <= rect.width - 50)
+  assert.ok(right >= 50 && right <= rect.width - 50)
 })
 
 test('PNG dimensions and timestamped file names are deterministic', () => {

@@ -69,10 +69,10 @@ public/samples/
 
 - React 18 / TypeScript 5.6 / Vite 6
 - Leaflet 1.9.4（CDN）、OpenStreetMap標準タイル
-- Node.js 20 / pnpm 9.14.2
+- Node.js 26 / pnpm 9.14.2
 
 ```sh
-corepack enable
+npm install --global pnpm@9.14.2
 pnpm install --frozen-lockfile
 pnpm dev     # ローカルで起動
 pnpm test    # 地理計算・集計・経路色の自動テスト

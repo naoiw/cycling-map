@@ -2,14 +2,14 @@
 
 ## 動作環境
 
-- Node.js 20 / pnpm 9.14.2（`.nvmrc`、`packageManager` に固定）
+- Node.js 26 / pnpm 9.14.2（`.nvmrc`、`packageManager` に固定）
 - React 18 / TypeScript 5.6 / Vite 6
 - Leaflet 1.9.4（外部CDNで読み込み）、OpenStreetMap標準タイル
 
 ## ローカル操作
 
 ```sh
-corepack enable
+npm install --global pnpm@9.14.2
 pnpm install --frozen-lockfile
 pnpm dev
 pnpm test

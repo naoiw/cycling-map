@@ -5,6 +5,7 @@ import { COLOR_BANDS, UNKNOWN_COLOR, resolveRideColor, type ColorMode } from './
 import { summarizeVisibleRides } from './lib/rideStats'
 import { downloadPng, generateRidePng } from './lib/exportPng'
 import { exportFilename, type ExportVariant } from './lib/exportGeometry'
+import { DEFAULT_MAP_STYLE, type MapStyleMode } from './lib/mapStyle'
 
 const dateLabel = (date: string | null) => date
   ? new Date(date).toLocaleString('ja-JP', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
@@ -23,6 +24,7 @@ function App() {
   const focusNonceRef = useRef(0)
   const [rides, setRides] = useState<Ride[]>([])
   const [colorMode, setColorMode] = useState<ColorMode>('manual')
+  const [mapStyle, setMapStyle] = useState<MapStyleMode>(DEFAULT_MAP_STYLE)
   const [manualColors, setManualColors] = useState<Record<string, string>>({})
   const [busy, setBusy] = useState(false)
   const exportLock = useRef(false)
@@ -135,7 +137,7 @@ function App() {
     setExporting(variant)
     setExportError('')
     try {
-      const blob = await generateRidePng(rides, routeColors, variant)
+      const blob = await generateRidePng(rides, routeColors, variant, mapStyle)
       downloadPng(blob, exportFilename(variant, new Date()))
     } catch (error) {
       setExportError(error instanceof Error ? error.message : 'PNGの保存に失敗しました。')
@@ -198,6 +200,13 @@ function App() {
                 <div><p className="section-kicker">ROUTE MAP</p><h2 id="map-title">走行経路</h2></div>
                 <button className="button button--secondary" disabled={!stats.visibleCount} onClick={() => { setFocus(null); setFitAllNonce(value => value + 1) }} type="button">全経路に合わせる</button>
               </div>
+              <div className="map-style-controls" role="group" aria-label="地図背景の表示モード">
+                <span className="map-style-controls-label">地図背景</span>
+                <div className="color-mode-buttons">
+                  <button className={'color-mode-button' + (mapStyle === 'color' ? ' is-active' : '')} type="button" aria-pressed={mapStyle === 'color'} onClick={() => setMapStyle('color')}>カラー</button>
+                  <button className={'color-mode-button' + (mapStyle === 'grayscale' ? ' is-active' : '')} type="button" aria-pressed={mapStyle === 'grayscale'} onClick={() => setMapStyle('grayscale')}>グレースケール</button>
+                </div>
+              </div>
               <div className="color-controls" role="group" aria-label="経路の色分けモード">
                 <span className="color-controls-label">経路の色分け</span>
                 <div className="color-mode-buttons">
@@ -222,7 +231,7 @@ function App() {
                   )}
                 </div>
               )}
-              <MapView rides={rides} colors={routeColors} focus={focus} fitAllNonce={fitAllNonce} />
+              <MapView rides={rides} colors={routeColors} mapStyle={mapStyle} focus={focus} fitAllNonce={fitAllNonce} />
               <div className="map-footer"><span>OpenStreetMap / Leaflet</span><span>表示中の記録を地図に重ねて描画</span></div>
               <div className="export-controls" aria-label="走行経路の画像保存">
                 <button className="button button--secondary" type="button" disabled={!stats.visibleCount || exporting !== null} onClick={() => { void savePng('map') }}>

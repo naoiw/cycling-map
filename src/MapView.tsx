@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { Ride } from './lib/parser'
 import type { Point } from './lib/geo'
+import type { MapStyleMode } from './lib/mapStyle'
 
 /** The small subset of the globally loaded Leaflet API needed by this component. */
 interface MapBounds {
@@ -32,9 +33,10 @@ function leaflet(): LeafletApi | undefined {
   return (window as Window & { L?: LeafletApi }).L
 }
 
-export default function MapView({ rides, colors, focus, fitAllNonce }: {
+export default function MapView({ rides, colors, mapStyle, focus, fitAllNonce }: {
   rides: Ride[]
   colors: readonly string[]
+  mapStyle: MapStyleMode
   focus: FocusRequest
   fitAllNonce: number
 }) {
@@ -108,7 +110,7 @@ export default function MapView({ rides, colors, focus, fitAllNonce }: {
   }, [rides, colors, focus, fitAllNonce])
 
   return (
-    <div className="map-surface">
+    <div className={'map-surface' + (mapStyle === 'grayscale' ? ' map-surface--grayscale' : '')}>
       <div ref={nodeRef} className="leaflet-map" aria-label="走行経路を表示する地図" />
       {!ready && (
         <div className="map-state" role={failed ? 'alert' : 'status'}>

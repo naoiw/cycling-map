@@ -2,6 +2,7 @@ import {
   EXPORT_HEIGHT, EXPORT_WIDTH, exportStatistics, mapViewport, pixelFor,
   visibleExportEntries, type ExportRide, type ExportVariant, type MapRect,
 } from './exportGeometry'
+import { mapTileFilter, type MapStyleMode } from './mapStyle'
 
 const TILE_SIZE = 256
 const TILE_URL = 'https://tile.openstreetmap.org'
@@ -115,6 +116,7 @@ function statsCard(ctx: CanvasRenderingContext2D, x: number, width: number, titl
 /** Returns a PNG Blob; callers can download it (#10) or share it (#11). */
 export async function generateRidePng(
   rides: readonly ExportRide[], colors: readonly string[], variant: ExportVariant,
+  mapStyle: MapStyleMode,
 ): Promise<Blob> {
   const entries = visibleExportEntries(rides, colors)
   if (!entries.length) throw new Error('表示中の走行記録がありません。')
@@ -155,7 +157,14 @@ export async function generateRidePng(
 
   // CORS-enabled images are required to keep the PNG canvas readable.
   // Any failed tile rejects the entire export; never save a partial basemap.
-  await renderTiles(ctx, rect, view)
+  ctx.save()
+  try {
+    // Canvas filter applies only to OSM raster tiles. Route lines and attribution stay colored.
+    ctx.filter = mapTileFilter(mapStyle)
+    await renderTiles(ctx, rect, view)
+  } finally {
+    ctx.restore()
+  }
   drawRoutes(ctx, rect, view, entries)
 
   const attribution = '© OpenStreetMap contributors · openstreetmap.org/copyright'

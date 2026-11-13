@@ -214,6 +214,8 @@ h1, h2, p { margin: 0; }
   isolation: isolate;
 }
 .leaflet-map { z-index: 0; width: 100%; height: 100%; }
+/* Only the raster tiles are desaturated; colored GPX/TCX paths and controls are untouched. */
+.map-surface--grayscale .leaflet-tile-pane { filter: grayscale(100%); }
 .map-state, .map-empty {
   position: absolute;
   z-index: 420;
@@ -429,14 +431,14 @@ h1, h2, p { margin: 0; }
 }
 
 /* Issue #8: route-color controls retain the existing dark theme. */
-.color-controls {
+.color-controls, .map-style-controls {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 10px 14px;
   padding: 0 24px 16px;
 }
-.color-controls-label {
+.color-controls-label, .map-style-controls-label {
   color: var(--muted);
   font-size: .78rem;
   font-weight: 650;
@@ -506,11 +508,11 @@ h1, h2, p { margin: 0; }
 }
 .ride-color-control select:hover { border-color: #58798d; }
 @media (max-width: 1050px) {
-  .color-controls { padding: 0 19px 16px; }
+  .color-controls, .map-style-controls { padding: 0 19px 16px; }
   .color-legend { margin: 0 19px 16px; }
 }
 @media (max-width: 620px) {
-  .color-controls { padding: 0 16px 14px; }
+  .color-controls, .map-style-controls { padding: 0 16px 14px; }
   .color-legend { margin: 0 16px 14px; }
 }
 

@@ -28,12 +28,14 @@ pnpm build
 - `src/lib/geo.ts`: 地理計算の純粋関数。
 - `src/lib/rideColors.ts`: 既定色・固定5段階自動色分け・手動モードの色指定を排他的に切り替える純粋関数。地図経路と一覧に共用。
 - `src/lib/exportGeometry.ts`: エクスポート対象、Web Mercator投影、表示範囲、統計表示文字列、ファイル名の純粋関数。
-- `src/lib/exportPng.ts`: Canvas上でOSMタイル・ポリライン・統計を合成しPNG Blobを返す。#11と共用できるようUIから独立。
+- `src/lib/exportPng.ts`: Canvas上でOSMタイル・ポリライン・統計を合成しPNG Blobを返す。地図背景のみ選択モードで描画する。
+- `src/lib/mapStyle.ts`: 背景色モードの型、初期値、Canvas用タイルフィルター。
 - `public/samples/`: 公開サンプル用の4つの `yymmdd.gpx` と配置手順。
 - `scripts/generate-sample-index.mjs`: dev/build前にサンプルを走査して `public/samples/index.json` を生成。
 - `tests/samples.test.mjs`: 日付ファイル名のフィルタリング、最大件数のテスト。
 - `tests/rideColors.test.mjs`: 距離・獲得標高の境界値、欠損値、手動色優先のテスト。
 - `tests/exportGeometry.test.mjs`: PNG対象の可視判定、全経路フィット、集計、ファイル名のテスト。
+- `tests/mapStyle.test.mjs`: 初期表示、Canvasフィルター、Leafletタイル専用CSSセレクターのテスト。
 - `src/index.css`: 他のnaoiwサイトと整合したサイト共通トークンとアプリ固有スタイル。
 
 開発サーバー起動後にサンプルを増減した場合は、`pnpm dev` を再起動してください。`pnpm exec vite build` 単独ではインデックスの自動生成が実行されないので、原則 `pnpm build` を使用してください。develop用のPagesワークフローは明示的に生成スクリプトを実行します。
@@ -48,6 +50,14 @@ DOMParserとLeafletを使うUIの動作は、ローカルブラウザまたは�
 4. 標高情報のないTCX/GPXでも統計に欠損表示がされるか確認する。
 5. ネットワーク切断／CORS失敗時にエラーメッセージを表示し、不完全なPNGが保存されないことを確認する。**タイルサーバーのCORS実動作はNodeテストの対象外なのでブラウザで要確認。**
 6. OpenStreetMapタイルの利用ポリシー（https://operations.osmfoundation.org/policies/tiles/）に従い、リクエストはクリック時に表示対象の必要分だけ行う。連続した過度な保存は避ける。
+
+## 背景モードの確認（#16）
+
+1. 初期状態で「グレースケール」が選択され、背景の道路・地名のみ無彩色、経路・凡例・Leaflet操作部はカラーで表示されること。
+2. 「カラー」「グレースケール」を相互に切り替え、地図の位置・縮尺・ライド表示状態・経路色が変わらないこと。
+3. サンプル4GPXと一般のGPX/TCXを読み込んだうえで、距離別・獲得標高別・手動色がすべて有効であること。
+4. 2つのPNG保存ボタンを両モードで実行し、**背景だけ**がグレースケール化され、軌跡・統計・帰属表示がカラーのままであること。
+5. 本番サイトの `main` では旧仕様のままで、`/develop/` のみに背景切替が反映されていること。
 
 ## ブランチ運用
 

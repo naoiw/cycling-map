@@ -200,6 +200,13 @@ function App() {
                 <div><p className="section-kicker">ROUTE MAP</p><h2 id="map-title">走行経路</h2></div>
                 <button className="button button--secondary" disabled={!stats.visibleCount} onClick={() => { setFocus(null); setFitAllNonce(value => value + 1) }} type="button">全経路に合わせる</button>
               </div>
+              <div className="map-style-controls" role="group" aria-label="地図背景の表示モード">
+                <span className="map-style-controls-label">地図背景</span>
+                <div className="color-mode-buttons">
+                  <button className={'color-mode-button' + (mapStyle === 'color' ? ' is-active' : '')} type="button" aria-pressed={mapStyle === 'color'} onClick={() => setMapStyle('color')}>カラー</button>
+                  <button className={'color-mode-button' + (mapStyle === 'grayscale' ? ' is-active' : '')} type="button" aria-pressed={mapStyle === 'grayscale'} onClick={() => setMapStyle('grayscale')}>グレースケール</button>
+                </div>
+              </div>
               <div className="color-controls" role="group" aria-label="経路の色分けモード">
                 <span className="color-controls-label">経路の色分け</span>
                 <div className="color-mode-buttons">
@@ -224,13 +231,6 @@ function App() {
                   )}
                 </div>
               )}
-              <div className="map-style-controls" role="group" aria-label="地図背景の表示モード">
-                <span className="map-style-controls-label">地図背景</span>
-                <div className="color-mode-buttons">
-                  <button className={'color-mode-button' + (mapStyle === 'color' ? ' is-active' : '')} type="button" aria-pressed={mapStyle === 'color'} onClick={() => setMapStyle('color')}>カラー</button>
-                  <button className={'color-mode-button' + (mapStyle === 'grayscale' ? ' is-active' : '')} type="button" aria-pressed={mapStyle === 'grayscale'} onClick={() => setMapStyle('grayscale')}>グレースケール</button>
-                </div>
-              </div>
               <MapView rides={rides} colors={routeColors} mapStyle={mapStyle} focus={focus} fitAllNonce={fitAllNonce} />
               <div className="map-footer"><span>OpenStreetMap / Leaflet</span><span>表示中の記録を地図に重ねて描画</span></div>
               <div className="export-controls" aria-label="走行経路の画像保存">

@@ -1,0 +1,22 @@
+name: Shared Pages dry-run trial
+
+on:
+  pull_request:
+    branches: [develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pages-check:
+    uses: naoiw/.github/.github/workflows/reusable-vite-pages.yml@feature/agent-sync-and-web-template
+    with:
+      dry-run: true
+      package-manager: pnpm
+      node-version: "26"
+      pnpm-version: "9.14.2"
+      publish-preview: true
+
+# Trial only: builds Pages output as an artifact and never publishes the site.
+# Remove this trial or pin to a stable SHA after upstream is merged and tested.

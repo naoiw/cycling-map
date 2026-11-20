@@ -1,0 +1,20 @@
+name: Smoke shared Pages v1.1 candidate (dry-run)
+
+on:
+  push:
+    branches: [chore/verify-shared-workflows-v1-1]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  smoke:
+    uses: naoiw/.github/.github/workflows/reusable-vite-pages.yml@00047e65d7e53551e2644df02d2f22743ea2c471
+    with:
+      dry-run: true
+      package-manager: pnpm
+      node-version: "26"
+      pnpm-version: "9.14.2"
+      publish-preview: true

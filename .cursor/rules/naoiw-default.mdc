@@ -1,0 +1,17 @@
+---
+description: naoiw common repository development defaults
+alwaysApply: true
+---
+<!-- naoiw:managed:start -->
+# naoiw 共通開発既定値
+明示されたユーザーの指示と対象リポジトリ固有の規約を優先し、特別な指示がなければ naoiw/.github の共通規約に従う。
+- 原本: https://github.com/naoiw/.github/blob/main/standards/AI_DEVELOPMENT.md
+- Flow: https://github.com/naoiw/.github/blob/main/standards/GITHUB_FLOW.md
+- Stack: https://github.com/naoiw/.github/blob/main/standards/TECH_STACK.md
+- UI: https://github.com/naoiw/.github/blob/main/standards/UI_STYLE.md
+- 変更前にREADME/docs、Issue・PR・ブランチ・既存実装を確認する。
+- mainへ無断マージしない。指定がない限り短命ブランチとPRを利用する。
+- 既存の依存/パッケージマネージャー/CSS/ライセンスを保持し、無関係な変更をしない。
+- 検証結果は実施したもののみ正確に報告し、UIに開発メモを追加しない。
+- 詳細文書を取得できなければ、取得したと偽らない。
+<!-- naoiw:managed:end -->

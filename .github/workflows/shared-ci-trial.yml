@@ -1,0 +1,23 @@
+name: Shared CI trial
+
+on:
+  pull_request:
+    branches: [develop, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  shared-check:
+    uses: naoiw/.github/.github/workflows/reusable-node-ci.yml@041005f0acc63763845112c6aa07983c19835f04
+    with:
+      package-manager: pnpm
+      pnpm-version: "9.14.2"
+      node-version: "26"
+      run-lint: false
+      run-typecheck: false
+      run-tests: true
+      run-build: true
+
+# Do not remove existing Validate develop or Pages workflows during the trial.

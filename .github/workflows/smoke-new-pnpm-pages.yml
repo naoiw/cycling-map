@@ -1,0 +1,22 @@
+name: Smoke shared pnpm Pages dry-run v7
+
+on:
+  push:
+    branches: [chore/trial-reusable-node-ci]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  pages:
+    uses: naoiw/.github/.github/workflows/reusable-vite-pages.yml@3d67bf465e5f96b6a8a039bb1a94a9f06c34c504
+    with:
+      dry-run: true
+      package-manager: pnpm
+      node-version: "26"
+      pnpm-version: "9.14.2"
+      publish-preview: true
+      preview-branch: develop
+      base-path: /cycling-map/

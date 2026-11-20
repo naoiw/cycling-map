@@ -15,17 +15,12 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 9.14.2
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 26
-          check-latest: true
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm test
-      - run: pnpm build
+    uses: naoiw/.github/.github/workflows/reusable-node-ci.yml@3f1b5f2dedeca0bbdd2cf640b4ab189fa28b77fb
+    with:
+      package-manager: pnpm
+      node-version: "26"
+      pnpm-version: "9.14.2"
+      run-lint: false
+      run-typecheck: false
+      run-tests: true
+      run-build: true

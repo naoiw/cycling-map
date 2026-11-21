@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   sync:
-    uses: naoiw/.github/.github/workflows/reusable-sync-ai-rules.yml@495524d0ef4b8418566782a569de6c34a9d63ce2
+    uses: naoiw/.github/.github/workflows/reusable-sync-ai-rules.yml@3f1b5f2dedeca0bbdd2cf640b4ab189fa28b77fb
     with:
       source-ref: main
 
